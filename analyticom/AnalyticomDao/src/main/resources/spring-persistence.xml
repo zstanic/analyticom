@@ -16,10 +16,10 @@
 
     <context:component-scan base-package="de.analyticom" />
 
-    <bean id="pixolut-entityManagerFactory" class="org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean">
+    <bean id="analyticom-entityManagerFactory" class="org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean">
         <property name="persistenceUnitName" value="analyticom_pu"/>
         <property name="persistenceXmlLocation" value="classpath*:persistence.xml"/>
-        <property name="dataSource" ref="pixolut-dataSource" />
+        <property name="dataSource" ref="analyticom-dataSource" />
         <property name="packagesToScan" value="de.analyticom"/>
         <property name="jpaVendorAdapter">
             <bean class="org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter"/>

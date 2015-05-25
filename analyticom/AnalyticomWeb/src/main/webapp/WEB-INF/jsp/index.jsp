@@ -19,6 +19,8 @@
 <link href="css/bootstrap.min.css" rel="stylesheet" type="text/css"/>
 <link href="css/uniform.default.css" rel="stylesheet" type="text/css"/>
 <link href="css/bootstrap-switch.css" rel="stylesheet" type="text/css"/>
+<link href="css/datepicker.css" rel="stylesheet" type="text/css"/>
+<link href="css/datepicker3.css" rel="stylesheet" type="text/css"/>
 <!-- END GLOBAL MANDATORY STYLES -->
 <!-- BEGIN THEME STYLES -->
 <!-- DOC: To use 'rounded corners' style just load 'components-rounded.css' stylesheet instead of 'components.css' in the below style tag -->
@@ -45,6 +47,8 @@
 	<script src="js/jquery.cokie.min.js" type="text/javascript"></script>
 	<script src="js/jquery.uniform.min.js" type="text/javascript"></script>
 	<script src="js/bootstrap-switch.js" type="text/javascript"></script>
+	<script src="js/bootstrap-datepicker.js" type="text/javascript"></script>
+	<script src="js/components-pickers.js" type="text/javascript"></script>
 	<!-- END CORE JQUERY PLUGINS -->
 	<script src="js/bootbox.min.js" type="text/javascript"></script>
 	<!-- BEGIN CORE ANGULARJS PLUGINS -->
@@ -69,61 +73,155 @@
 <!-- END PAGE LEVEL SCRIPTS -->
 <script>
 
-function populateContactData(id, name, phone, email, city, country){
-	$("#cntID").val(id);
-	$("#cntName").val(name);
-	$("#cntPhone").val(phone);
-	$("#cntEMail").val(email);
-	$("#cntCity").val(city);
-	$("#cntCountry").val(country);
+function populatePRData(id){
+	$("#plyRegsID").val(id);
+}
+
+function populatePlayerData(id, uid, fn, ln, dob, pob, country){
+	$("#plyID").val(id);
+	$("#plyUID").val(uid);
+	$("#plyFirstName").val(fn);
+	$("#plyLastName").val(ln);
+	$("#plyDOB").val(dob);
+	$("#plyPOB").val(pob);
+	$("#plyCountry").val(country);
+	
+	var request = $.ajax({
+		
+		type: "POST",  
+        url: "/getPlayerPRs.json",  
+        data: "id="+id,
+        success: function(data){
+        	var obj = jQuery.parseJSON(data); 
+        	$.each(obj, function(i, user) {
+                var tblRow = "<tr onclick=\"populatePRData("+user.id+")\"><td>" + user.id + "</td>"
+                        		+ "<td>" + user.club + "</td><td>" + user.df + "</td><td>" + user.dt + "</td></tr>"
+                $(tblRow).appendTo("#myPlayerRegs tbody");
+            });
+        }
+		
+	});
+}
+
+function handleSuccess(data){
+	$.each(data, function(i, user) {
+        var tblRow = "<tr onclick=\"populatePlayerData("+user.id+",'"+user.uid+"','"+user.fn+"','"+user.ln+"','"+user.dob+"','"+user.pob+"','"+user.country+"')\"><td>" + user.id + "</td>"
+                		+ "<td>" + user.uid + "</td><td>" + user.fn + "</td><td>" + user.ln + "</td><td>" + user.dob + "</td><td>" + user.pob + "</td><td>" + user.country + "</td></tr>"
+        $(tblRow).appendTo("#myPlayer tbody");
+    });
+}
+
+function handleError(data){
+	alert("error "+data);
 }
 
 
 jQuery(document).ready(function() {
 	
 	UIAlertDialogApi.init();
+	ComponentsPickers.init();
 	
 	$("#clearCnt").click(function(){
-		$("#cntID").val("");
-		$("#cntName").val("");
-		$("#cntPhone").val("");
-		$("#cntEMail").val("");
-		$("#cntCity").val("");
-		$("#cntCountry").val("");
+		$("#plyID").val("");
+		$("#plyUID").val("");
+		$("#plyFirstName").val("");
+		$("#plyLastName").val("");
+		$("#plyDOB").val("");
+		$("#plyPOB").val("");
+		$("#plyCountry").val("");
 	});
    
 	$("#saveCnt").click(function(){
-		var id = $("#cntID").val();
-		var name = $("#cntName").val();
-		var phone = $("#cntPhone").val();
-		var email = $("#cntEMail").val();
-		var city = $("#cntCity").val();
-		var country = $('#cntCountry').val();
+		var id = $("#plyID").val();
+		var uid = $("#plyUID").val();
+		var fn = $("#plyFirstName").val();
+		var ln = $("#plyLastName").val();
+		var dob = $("#plyDOB").val();
+		var pob = $('#plyPOB').val();
+		var country = $('#plyCountry').val();
+		
 		var request = $.ajax({  
             type: "POST",  
-            url: "/saveCnt.json",  
-            data: "id="+id+"&name="+name+"&phone="+phone+"&email="+email+"&city="+city+"&country="+country
+            url: "/savePlayer.json",  
+            data: "id="+id+"&uniqueId="+uid+"&firstName="+fn+"&lastName="+ln+"&dob="+dob+"&pob="+pob+"&country="+country
         });
 		
-		bootbox.alert("Contact Saved !!");
+		bootbox.alert("Data Saved !!");
 	});
 	
-	$("#deleteCnt").click(function(){
-		var id = $("#cntID").val();
+	$("#saveNewReg").click(function(){
+		var userid = $("#plyID").val();
+		var clubid = $("#newRegSelect").val();
+		var df = $("#dateFrom").val();
+		var dt = $("#dateTo").val();
+		
+		var request = $.ajax({
+			
+			type: "POST",  
+            url: "/savePR.json",  
+            data: "userid="+userid+"&clubid="+clubid+"&df="+df+"&dt="+dt
+			
+		});
+	});
+	
+	$("#searchCnt").click(function(){
+		var id = $("#plyID").val();
+		var uid = $("#plyUID").val();
+		var fn = $("#plyFirstName").val();
+		var ln = $("#plyLastName").val();
+		var dob = $("#plyDOB").val();
+		var pob = $('#plyPOB').val();
+		var country = $('#plyCountry').val();
+		
 		var request = $.ajax({  
             type: "POST",  
-            url: "/deleteCnt.json",  
+            url: "/searchPlayer.json",  
+            data: "id="+id+"&uniqueId="+uid+"&firstName="+fn+"&lastName="+ln+"&dob="+dob+"&pob="+pob+"&country="+country,
+            success: function(data){
+            	var obj = jQuery.parseJSON(data);
+            	handleSuccess(obj);
+            },
+            error: function(data){
+            	handleError(data);
+            }
+        });
+		
+	});
+	
+	
+	$("#deletePlyRegs").click(function(){
+		var id = $("#plyRegsID").val();
+		var request = $.ajax({  
+            type: "POST",  
+            url: "/deletePR.json",  
             data: "id="+id
         });
 		
-		bootbox.alert("Contact Deleted !!");
+		bootbox.alert("Data Deleted !!");
+	});
+	
+	$("#deleteCnt").click(function(){
+		var id = $("#plyID").val();
+		var request = $.ajax({  
+            type: "POST",  
+            url: "/deletePlayer.json",  
+            data: "id="+id
+        });
+		
+		bootbox.alert("Data Deleted !!");
 	});	
 	
-	$.getJSON("/getAllContacts.json", function(data) {
-        $.each(data, function(i, user) {
-            var tblRow = "<tr onclick=\"populateContactData("+user.id+",'"+user.name+"','"+user.phone+"','"+user.email+"','"+user.city+"','"+user.country+"')\"><td>" + user.id + "</td>"
-                    		+ "<td>" + user.name + "</td><td>" + user.phone + "</td><td>" + user.email + "</td><td>" + user.city + "</td><td>" + user.country + "</td></tr>"
-            $(tblRow).appendTo("#myContacts tbody");
+	$.getJSON("/getAllClubs.json", function(data) {
+        $.each(data, function(i, user) {        	
+        	var tblRow = "<option value=\""+user.id+"\">"+user.name+"</option>";
+            $("#newRegSelect").append(tblRow);
+        });
+    });
+	
+	$.getJSON("/getAllCountries.json", function(data) {
+        $.each(data, function(i, user) {        	
+        	var tblRow = "<option id=\""+user.id+"\" value=\""+user.name+"\">"+user.name+"</option>";
+            $("#plyCountry").append(tblRow);
         });
     });
 	
@@ -162,16 +260,7 @@ jQuery(document).ready(function() {
 					<!-- BEGIN USER LOGIN DROPDOWN -->
 					<!-- DOC: Apply "dropdown-dark" class after below "dropdown-extended" to change the dropdown styte -->
 					<li class="dropdown dropdown-user dropdown-dark">
-						<a href="#" class="dropdown-toggle" data-toggle="dropdown" data-hover="dropdown" data-close-others="true">
-						<span class="username username-hide-on-mobile">
-						<%= request.getSession().getAttribute("loggedUser") %> </span>
-						</a>
-						<ul class="dropdown-menu dropdown-menu-default">
-							<li>
-								<a href="login.html?logout=logout">
-								<i class="icon-key"></i> Log Out </a>
-							</li>
-						</ul>
+						
 					</li>
 					<!-- END USER LOGIN DROPDOWN -->
 				</ul>
@@ -225,18 +314,19 @@ jQuery(document).ready(function() {
 						<div class="portlet-title">
 							<div class="caption caption-md">
 								<i class="icon-bar-chart theme-font-color hide"></i>
-								<span class="caption-subject theme-font-color bold uppercase">My contacts</span>
+								<span class="caption-subject theme-font-color bold uppercase">Player</span>
 							</div>
 						</div>
 						<div class="portlet-body">
-							<table id="myContacts" class="table table-striped table-bordered table-hover dataTable no-footer" cellspacing="0" width="100%">
+							<table id="myPlayer" class="table table-striped table-bordered table-hover dataTable no-footer" cellspacing="0" width="100%">
 						        <thead>
 								    <tr>
 								    	<th>ID</th>
-								    	<th>Name</th>
-								    	<th>Phone</th>
-								    	<th>E-Mail</th>
-								    	<th>City</th>
+								    	<th>Unique ID</th>
+								    	<th>First Name</th>
+								    	<th>Last Name</th>
+								    	<th>Date of birth</th>
+								    	<th>Place of birth</th>
 								    	<th>Country</th>
 								    </tr>
 								 </thead>
@@ -250,32 +340,109 @@ jQuery(document).ready(function() {
 						
 						<div class="form-group">
 							<label class="control-label">ID</label>
-							<input id="cntID" type="text" readonly="readonly" placeholder="ID" class="form-control"/>
+							<input id="plyID" type="text" readonly="readonly" placeholder="ID" class="form-control"/>
 						</div>
 						<div class="form-group">
-							<label class="control-label">Name</label>
-							<input id="cntName" type="text" placeholder="Name" class="form-control"/>
+							<label class="control-label">Unique ID</label>
+							<input id="plyUID" type="text" placeholder="Unique ID" class="form-control"/>
 						</div>
 						<div class="form-group">
-							<label class="control-label">Phone</label>
-							<input id="cntPhone" type="text" placeholder="Phone" class="form-control"/>
+							<label class="control-label">First Name</label>
+							<input id="plyFirstName" type="text" placeholder="First Name" class="form-control"/>
 						</div>
 						<div class="form-group">
-							<label class="control-label">E-Mail</label>
-							<input id="cntEMail" type="text" placeholder="E-Mail" class="form-control"/>
+							<label class="control-label">Last Name</label>
+							<input id="plyLastName" type="text" placeholder="Last Name" class="form-control"/>
 						</div>
 						<div class="form-group">
-							<label class="control-label">City</label>
-							<input id="cntCity" type="text" class="form-control" placeholder="City" />
+							<label class="control-label">Date of birth</label>
+							<input id="plyDOB" class="form-control form-control-inline input-medium date-picker" size="16" value="" type="text" placeholder="Date of birth" />
+						</div>
+						<div class="form-group">
+							<label class="control-label">Palce of birth</label>
+							<input id="plyPOB" type="text" class="form-control" placeholder="Palce of birth" />
 						</div>
 						<div class="form-group">
 							<label class="control-label">Country</label>
-							<input id="cntCountry" type="text" class="form-control" placeholder="Country" />
+							<select id="plyCountry" class="form-control" ></select>
 						</div>
 						<div class="form-group">
 							<input id="saveCnt" value="Save" name="saveCnt" type="button" class="btn default"/>
 							<input id="deleteCnt" value="Delete" name="deleteCnt" type="button" class="btn default"/>
+							<input id="searchCnt" value="Search" name="searchCnt" type="button" class="btn default"/>
 							<input id="clearCnt" value="Clear" name="ClearCnt" type="button" class="btn default"/>
+						</div>
+						
+					</div>
+					<!-- END PORTLET-->
+				</div>
+				<div class="col-md-6 col-sm-12">
+					<!-- BEGIN PORTLET-->
+					<div class="portlet light ">
+						<div class="portlet-title">
+							<div class="caption caption-md">
+								<i class="icon-bar-chart theme-font-color hide"></i>
+								<span class="caption-subject theme-font-color bold uppercase">New registration</span>
+							</div>
+						</div>
+						<div class="form-group">
+							<label class="control-label">Club:</label>
+							<select id="newRegSelect" class="form-control" >
+								
+							</select>
+						</div>
+						<div class="form-group">
+							<label class="control-label">Date from:</label>
+							<input id="dateFrom" class="form-control form-control-inline input-medium date-picker" size="16" value="" type="text">
+						</div>
+						<div class="form-group">
+							<label class="control-label">Date to:</label>
+							<input id="dateTo" class="form-control form-control-inline input-medium date-picker" size="16" value="" type="text">
+						</div>
+						
+						<div class="form-group">
+							<input id="saveNewReg" value="Save" name="saveNewReg" type="button" class="btn default"/>
+							<input id="clearNewReg" value="Clear" name="clearNewReg" type="button" class="btn default"/>
+						</div>
+						
+					</div>
+					<!-- END PORTLET-->
+				</div>
+				<br />
+				<div class="col-md-6 col-sm-12">
+					<!-- BEGIN PORTLET-->
+					<div class="portlet light ">
+						<div class="portlet-title">
+							<div class="caption caption-md">
+								<i class="icon-bar-chart theme-font-color hide"></i>
+								<span class="caption-subject theme-font-color bold uppercase">Player registrations</span>
+							</div>
+						</div>
+						<div class="portlet-body">
+							<table id="myPlayerRegs" class="table table-striped table-bordered table-hover dataTable no-footer" cellspacing="0" width="100%">
+						        <thead>
+								    <tr>
+								    	<th>ID</th>
+								    	<th>Club</th>
+								    	<th>Date from</th>
+								    	<th>Date to</th>
+								    </tr>
+								 </thead>
+						 					 
+						        <tbody>
+						        	
+								</tbody>
+						        
+						    </table>
+						    
+						    <div class="form-group">
+								<label class="control-label">ID</label>
+								<input id="plyRegsID" type="text" readonly="readonly" placeholder="ID" class="form-control"/>
+							</div>
+							
+							<div class="form-group">
+								<input id="deletePlyRegs" value="Delete" name="deletePlyRegs" type="button" class="btn default"/>
+							</div>
 						</div>
 						
 					</div>

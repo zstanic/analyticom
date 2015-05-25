@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:jee="http://www.springframework.org/schema/jee"
+	xmlns:tx="http://www.springframework.org/schema/tx"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd
+        http://www.springframework.org/schema/jee http://www.springframework.org/schema/jee/spring-jee.xsd
+        http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx.xsd">
+
+    <jee:jndi-lookup id="analyticom-dataSource" jndi-name="jdbc/analyticomDS" expected-type="javax.sql.DataSource" resource-ref="true"/>
+	<context:annotation-config />
+	<tx:annotation-driven transaction-manager="analyticom-transactionManager"/>
+
+    <context:component-scan base-package="de.analyticom" />
+
+    <bean id="analyticom-entityManagerFactory" class="org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean">
+        <property name="persistenceUnitName" value="analyticom_pu"/>
+        <property name="persistenceXmlLocation" value="classpath*:persistence.xml"/>
+        <property name="dataSource" ref="analyticom-dataSource" />
+        <property name="packagesToScan" value="de.analyticom"/>
+        <property name="jpaVendorAdapter">
+            <bean class="org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter"/>
+        </property>
+        <property name="jpaProperties">
+            <props>
+                <prop key="hibernate.cache.generate_statistics">true</prop>
+                <prop key="hibernate.cache.use_second_level_cache">true</prop>
+                <prop key="hibernate.cache.use_query_cache">true</prop>
+                <prop key="hibernate.enable_lazy_load_no_trans">true</prop>
+                <!-- <prop key="hibernate.transaction.factory_class">org.hibernate.transaction.JTATransactionFactory</prop>
+                <prop key="hibernate.transaction.manager_lookup_class">org.hibernate.transaction.JBossTransactionManagerLookup</prop>
+                <prop key="hibernate.cache.region.factory_class">net.sf.ehcache.hibernate.EhCacheRegionFactory</prop>
+                <prop key="hibernate.transaction.manager_lookup_class">org.hibernate.transaction.TransactionManagerLookup</prop>-->
+            </props>
+        </property>
+    </bean>
+    
+    <bean id="analyticom-transactionManager" class="org.springframework.orm.jpa.JpaTransactionManager">
+        <property name="entityManagerFactory" ref="analyticom-entityManagerFactory" />
+        <qualifier value="analyticomTM"/>
+    </bean>
+
+</beans>
